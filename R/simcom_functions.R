@@ -258,7 +258,8 @@ cons_comp_analysis <- function(data,
 #' simulated_data <- sim_data()
 #' comp_list <- cons_comp_analysis(simulated_data)
 #' plot_data <- comp_list[[1]]
-#' plot_polygons(plot_data)
+#' data <- plot_data
+#' plot_polygons(plot_data, letters.right = TRUE)
 plot_polygons <- function(data,
                           poly.border.col = "grey10",
                           poly.fill.col = c("white", "white",
@@ -266,12 +267,13 @@ plot_polygons <- function(data,
                                             "#FDF2CA", "#9DC3E6"),
                           letters = c("P,S,E", "S,E", "P,E", "P,S", "E", "S", "P"),
                           letter.col = "black",
+                          letters.right = FALSE,
                           ...){
 
   is.num <-  unlist(purrr::map(data, is.numeric))
   nonNumeric <-  names(data)[!is.num]
   if (any(!is.num)) {
-    stop(paste("The following items/columns are non-numeric. \n ",
+    warning(paste("The following items/columns are non-numeric. \n ",
                nonNumeric, collapse=" "), call.=FALSE)
   }
 
@@ -327,21 +329,24 @@ plot_polygons <- function(data,
       list_low[[x]] <- res[[x]][ceiling(length(res[[x]])*.08):floor(length(res[[x]])*.90)]
       list_up[[x]] <- res[[y]][ceiling(length(res[[y]])*.08):floor(length(res[[y]])*.90)]
 
-      if ( nrow(data) >= 12) {
+      ## add here the argument that letters can be plotted to the right
+      if ( nrow(data) >= 12 & !letters.right) {
         # get the position of the letters, which is where the maximum of the difference between the borders is. if there is more than one maximum, take only the first
         posx = names(which(list_low[[x]]-list_up[[x]] == max(list_low[[x]]-list_up[[x]])))[1]
         # compute the mean difference, needs to be in the tighter/reduced lists
         posy = mean(c(list_low[[x]][posx], list_up[[x]][posx]))
         text(as.numeric(posx), posy, letters[x], col = letter.col)
-      } else {
+      } else
+      {
         posx <- (nrow(data)-1)
         # compute the mean, not in the tight lists (but in 'res', to plot the letter to the right hand side)
         posy = mean(c(res[[x]][posx], res[[y]][posx]))
         text(posx-posx*0.03, posy, letters[x], col = letter.col)
       }
-    })
-  )
+    }))
 }
+
+
 
 
 
