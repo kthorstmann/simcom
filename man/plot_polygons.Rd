@@ -5,8 +5,9 @@
 \title{Plot Stacked Areas}
 \usage{
 plot_polygons(data, poly.border.col = "grey10", poly.fill.col = c("white",
-  "white", "white", "white", "#F8CBAE", "#FDF2CA", "#9DC3E6"), letters = NULL,
-  letter.col = "black", ...)
+  "white", "white", "white", "#F8CBAE", "#FDF2CA", "#9DC3E6"),
+  letters = c("P,S,E", "S,E", "P,E", "P,S", "E", "S", "P"),
+  letter.col = "black", letters.right = FALSE, ...)
 }
 \arguments{
 \item{data}{The data frame that needs to be plotted. Should only contain the variables that should appear in the plot.}
@@ -20,6 +21,8 @@ plot_polygons(data, poly.border.col = "grey10", poly.fill.col = c("white",
 \item{letter.col}{The colors of the letters that are plotted.}
 
 \item{...}{Further arguments passed on to the plot function plot(...)}
+
+\item{letters.right.}{Logical, default is FALSE. If TRUE, the letters are set to the right of the plot.}
 }
 \value{
 Plots areas that are scaled to 100%.
@@ -28,6 +31,9 @@ Plots areas that are scaled to 100%.
 Plot Stacked Areas
 }
 \examples{
-## Not defined yet
+simulated_data <- sim_data()
+comp_list <- cons_comp_analysis(simulated_data)
+plot_data <- comp_list[[1]]
+plot_polygons(plot_data, letters.right = TRUE)
 }
 

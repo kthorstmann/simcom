@@ -386,3 +386,63 @@ plot_com <- function(components, rsquared, ...){
 }
 
 
+# replicate sim  -----------------------------------------------------
+
+#' Repeat Simulation
+#'
+#' @param REPS The number of simulations to be made of
+#' @param n_pop The size of the population to simulate
+#' @param b_s The correlation between behavior and the situational variable on level-2, which determines the correlation of their counterparts on level-1.
+#' @param b_e The correlation between the stable environment e and the behavior b.
+#' @param s_p The correlation between the situational variable and the average behavior.
+#' @param b_p The correlation between the average behavior and personality.
+#' @param s_e The correlation between the situation and the stable environment
+#' @param p_e The correlation between the personality p and the environment e.
+#' @param cor_bs_l1 The average correlation of behavior and situations on level-1, within person.
+#' @param l1_var The variance of the level-1 variables (the larger, the less accurate will the mean reflect the true score at fewer measurement occasions)
+#' @param l1_bs_sample The number of level-1 measurement occaisons that are sampled.
+#'
+#' @return Returns a list with two objects: The first is a data frame for the component analyses, the second is a vector with the explained variances.
+#' @export
+#'
+#' @examples
+#' replicate_sim(10)
+replicate_sim <- function(REPS = 10,
+                          n_pop = 1000,
+                          b_s = 0.26,
+                          b_e = 0.19,
+                          s_p = 0.14,
+                          b_p = 0.27,
+                          s_e = 0.25,
+                          p_e = 0.23,
+                          cor_bs_l1 = .2,
+                          l1_var = 2,
+                          l1_bs_sample = 50){
+
+  # function to replicate
+  repl_f <- function(...){
+    data <- sim_data(...)
+    parameters <- cons_comp_analysis(data)
+    parameters
+  }
+  # pass all parameters from above
+
+  parameters_list <- replicate(REPS, repl_f(n_pop = n_pop, b_s = b_s, b_e = b_e,
+                                            s_p = s_p, b_p = b_p, s_e = s_e,
+                                            p_e = p_e, cor_bs_l1 = cor_bs_l1,
+                                            l1_var = l1_var, l1_bs_sample = l1_bs_sample)
+  )
+
+  parameters_pos <- seq(1, REPS*2, by = 2)
+  rsquared_pos <- seq(2, REPS*2, by = 2)
+
+  para_list <- purrr::map(parameters_pos, ~ parameters_list[[.]])
+  rsq_list <- purrr::map(rsquared_pos, ~ parameters_list[[.]])
+
+  para_mean <-  plyr::aaply(plyr::laply(para_list, as.matrix), c(2, 3), mean, na.rm =TRUE)
+  rsq_mean <- colMeans(do.call("rbind", rsq_list))
+  return <- list(para_mean,
+                 rsq_mean)
+  return(return)
+}
+

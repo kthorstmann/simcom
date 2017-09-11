@@ -4,12 +4,12 @@
 \alias{plot_com}
 \title{Plot results of components analysis}
 \usage{
-plot_com(params_df, ...)
+plot_com(components, rsquared, ...)
 }
 \arguments{
-\item{params_df}{The results of the function, which is a list with to entries.}
-
 \item{...}{Further arguments passed on to plot_polygons}
+
+\item{params_df}{The results of the function, which is a list with to entries.}
 }
 \value{
 Returns a plot with the components
@@ -18,6 +18,8 @@ Returns a plot with the components
 Plot results of components analysis
 }
 \examples{
-## note defined yet
+data <- sim_data()
+comp_list <- cons_comp_analysis(simulated_data)
+plot_com(components = comp_list[[1]], rsquared = comp_list[[2]])
 }
 

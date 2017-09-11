@@ -29,6 +29,8 @@ Returns a list with two elements:
 Run Components Analysis
 }
 \examples{
-## note defined yet
+simulated_data <- sim_data()
+data <- simulated_data
+data <- cons_comp_analysis(simulated_data)
 }
 
