@@ -249,6 +249,7 @@ cons_comp_analysis <- function(data,
 #' @param poly.fill.col The fill of the stacked areas. The areas are colored from top to bottom (i.e. the highest one first).
 #' @param letters The letters that should be placed in the areas. If NULL, the names of the data is used.
 #' @param letter.col The colors of the letters that are plotted.
+#' @param letters.right. Logical, default is FALSE. If TRUE, the letters are set to the right of the plot.
 #' @param ... Further arguments passed on to the plot function plot(...)
 #'
 #' @return Plots areas that are scaled to 100%.
@@ -258,7 +259,6 @@ cons_comp_analysis <- function(data,
 #' simulated_data <- sim_data()
 #' comp_list <- cons_comp_analysis(simulated_data)
 #' plot_data <- comp_list[[1]]
-#' data <- plot_data
 #' plot_polygons(plot_data, letters.right = TRUE)
 plot_polygons <- function(data,
                           poly.border.col = "grey10",
