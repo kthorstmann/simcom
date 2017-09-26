@@ -5,7 +5,7 @@
 \title{Run Components Analysis}
 \usage{
 cons_comp_analysis(data, outcome_state = "b_state", pred_trait = c("P",
-  "E"), pred_state = c("s_state"), single = TRUE, id = "id")
+  "E"), pred_state = c("s_state"), single = FALSE, id = "id")
 }
 \arguments{
 \item{data}{The data frame to analyze}

@@ -157,7 +157,7 @@ sim_data <- function(n_pop = 1000,
 #' data <- cons_comp_analysis(simulated_data)
 cons_comp_analysis <- function(data, outcome_state = "b_state", pred_trait = c("P", "E"),
                                pred_state = c("s_state"),
-                               single = TRUE,
+                               single = FALSE,
                                id = "id"){
 
   # max measurement occasions
@@ -372,8 +372,6 @@ plot_polygons <- function(data,
 
 
 
-
-
 # plot components with explained variance ----------------------------
 
 #' Plot results of components analysis
@@ -409,6 +407,36 @@ plot_com <- function(components, rsquared, ...){
   axis(4, at=c(100, 105, 110), labels = c(0, 50, 100))
 }
 
+
+
+# plot dominance -----------------------------------------------------
+
+#' Plot Results from Dominance Analyses
+#'
+#' @param dominance The dominance results from cons_comp_analysis
+#' @param line_names The names of the lines. Default is P, state, and E
+#' @param ... Further parameters passed on to plot()
+#'
+#' @return Returns a plot with the results of the dominance analyses
+#' @export
+#'
+#' @examples
+#' data <- sim_data()
+#' estimates <- cons_comp_analysis(data, single=FALSE)
+#' plot_dominance(estimates)
+plot_dominance <- function(dominance, line_names = c("P", "state", "E"), ...){
+  x_max <- nrow(dominance)
+  y_max <- max(dominance)
+  y_max <- round(y_max*10, 0)/10
+  plot(NA, ylim = c(0, y_max), xlim = c(0, x_max), ylab = "Dominance", xlab = "Number of States", bty = "n", ...)
+  line_names <- colnames(dominance)
+  line_types <- 1:ncol(dominance)+1
+  invisible(purrr::map2(.x = data.frame(dominance), .y = line_types,
+                        .f = function(x,y) {
+                          lines(x, lty = y)
+                        }))
+  legend(x=0, y=y_max, legend=line_names, lty=line_types, bty = "n")
+}
 
 # replicate sim  -----------------------------------------------------
 

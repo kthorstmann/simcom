@@ -2,6 +2,7 @@
 
 export(cons_comp_analysis)
 export(plot_com)
+export(plot_dominance)
 export(plot_polygons)
 export(replicate_sim)
 export(sim_data)
