@@ -5,7 +5,7 @@
 \title{Run Components Analysis}
 \usage{
 cons_comp_analysis(data, outcome_state = "b_state", pred_trait = c("P",
-  "E"), pred_state = c("s_state"), id = "id")
+  "E"), pred_state = c("s_state"), single = TRUE, id = "id")
 }
 \arguments{
 \item{data}{The data frame to analyze}
@@ -22,7 +22,8 @@ cons_comp_analysis(data, outcome_state = "b_state", pred_trait = c("P",
 Returns a list with two elements:
 \itemize{
  \item{1}{The results of the components analysis}
- \item{2}{The explained variacen per state}
+ \item{2}{The explained variance per state}
+ \item{3}{The results of the dominance analyses}
 }
 }
 \description{
