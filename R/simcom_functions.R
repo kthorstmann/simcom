@@ -146,7 +146,8 @@ sim_data <- function(n_pop = 1000,
 #' @return Returns a list with two elements:
 #' \itemize{
 ##'  \item{1}{The results of the components analysis}
-##'  \item{2}{The explained variacen per state}
+##'  \item{2}{The explained variance per state}
+##'  \item{3}{The results of the dominance analyses}
 ##' }
 #' @export
 #'
@@ -154,15 +155,14 @@ sim_data <- function(n_pop = 1000,
 #' simulated_data <- sim_data()
 #' data <- simulated_data
 #' data <- cons_comp_analysis(simulated_data)
-cons_comp_analysis <- function(data,
-                               outcome_state = "b_state",
-                               pred_trait = c("P", "E"),
+cons_comp_analysis <- function(data, outcome_state = "b_state", pred_trait = c("P", "E"),
                                pred_state = c("s_state"),
+                               single = TRUE,
                                id = "id"){
 
   # max measurement occasions
   out <- split(data, f = data[, id])
-  length_out <- purrr::map(out, nrow)
+  length_out <- map(out, nrow)
   max_o <- max(unlist(length_out))
 
   # function to make all data frames have equal rows
@@ -175,23 +175,29 @@ cons_comp_analysis <- function(data,
     }
   }
   # make all data frames in the list have equal length
-  level_1_id_states <- purrr::map(out, ~ make_nrow(., max_o))
+  level_1_id_states <- map(out, ~ make_nrow(., max_o))
 
   # function to generate the consecutive state variables
-  sample_all_o <- function(i){ # rsquare
-    odf <- purrr::map(level_1_id_states, ~ .[1:i, ])
+  # i = 4
 
-    ## aggregate within person to get the average state of the person
-    aggregate_within <- function(odf){
-      data.frame(id = odf[1,id],
-                 out_trait = mean(odf[,outcome_state], na.rm = TRUE),
-                 pre_trait = mean(odf[,pred_state], na.rm = TRUE))
-    }
+  aggregate_within <- function(odf){
+    data.frame(id = odf[1,id],
+               out_trait = mean(odf[,outcome_state], na.rm = TRUE),
+               pre_trait = mean(odf[,pred_state], na.rm = TRUE))
+  }
+
+
+  sample_all_o <- function(i) { # i is the occasion of interest here
+    odf <- map(level_1_id_states, ~ .[1:i, ])
+
+    ## single behavior and single situation as predictors
+    single_occasion <- map(level_1_id_states, ~ .[i, ])
+
     # aggregate states
-    aggregate_states <- purrr::map(odf, aggregate_within)
-
-    # combine states in data frame
+    aggregate_states <- map(odf, aggregate_within) # function from above
+    # combine aggregated states in data frame
     aggregate_data <- do.call("rbind", aggregate_states)
+    single_state_data <- do.call("rbind", single_occasion)
 
     # set names of id before merging
     data.table::setnames(aggregate_data, old="id", new = id)
@@ -199,43 +205,61 @@ cons_comp_analysis <- function(data,
     # merge aggregate state and trait data
     suppressWarnings(full_data <- dplyr::inner_join(data, aggregate_data, by = id))
 
-    # aggregate state data to trait data
-    level2_data <- aggregate(full_data[c(pred_trait, "out_trait", "pre_trait")],
-                             by=list(full_data[,id]), mean, na.rm=TRUE)
+    # select single states
+    single_state_data_subset <- single_state_data[c(outcome_state, pred_state, id)]
+    data.table::setnames(single_state_data_subset, old=c(outcome_state, pred_state), new = paste0(c(outcome_state, pred_state), "_single"))
 
-    # set names to initial names that were handed over to the function
-    data.table::setnames(x = level2_data, old = names(level2_data),
-                         c(id, pred_trait, outcome_state, pred_state))
+    # merge single states with data frame
+    full_data <- dplyr::inner_join(full_data, single_state_data_subset, by = id)
 
-    # do the component analysis
-    apsOut = yhat::aps(level2_data, outcome_state, list(pred_trait[1],
-                                                        pred_state,
-                                                        pred_trait[2])
-                       )
+    # take subset of variables (rows and columns) that are needed for the analyses
+    level2_data <- distinct(full_data[c(pred_trait, "out_trait", "pre_trait", paste0(c(outcome_state, pred_state), "_single"), id)])
+    data.table::setnames(x = level2_data, old = c("out_trait", "pre_trait"), new = c(outcome_state, pred_state))
 
-
+    # component analysis with single behavior
+    if (single) {
+      apsOut = aps(level2_data, paste0(outcome_state, "_single"), list(pred_trait[1], pred_state, pred_trait[2], paste0(pred_state, "_single")))
+    } else {
+      # componen analysis with aggregated behavior outcome
+      apsOut = aps(level2_data, outcome_state, list(pred_trait[1], pred_state, pred_trait[2]))
+    }
     # return parameters
-    commonality <- round(yhat::commonality(apsOut)[,2], 3)
+    commonality <- round(commonality(apsOut)[,2], 3)
     rsquared <- sum(apsOut$APSMatrix[,2])
+    dominance <- dominance(apsOut)$GD # return general dominance
 
+    if (rsquared > 1) {
+      rsquared <- 1
+      warning("R-squared in this model was large than 1 and therefore set to 1")
+    }
+
+
+    # return elements for each situation/measurement
     return(
       list(commonality,
-           rsquared)
+           rsquared,
+           dominance)
     )
   }
 
-
   # run the above function across all state averages
-  params <- purrr::map(1:max_o, sample_all_o)
+  params <- map(1:max_o, sample_all_o)
+  # extract all firt elements of the list
 
-  # extract all first elements of the list
+  # componentens
   c <- lapply(params, "[[", 1)
-  rsq <- unlist(lapply(params, "[[", 2))
   params_df <- do.call("rbind", c)
   params_df[params_df < 0] <- NA
+  # r-squared
+  rsq <- unlist(lapply(params, "[[", 2))
+  # dominance
+  dmc <- lapply(params, "[[", 3)
+  dmc_df <- do.call("rbind", dmc)
+
   return(
     list(params_df,
-         rsq)
+         rsq,
+         dmc_df)
   )
 }
 
